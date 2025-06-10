@@ -1,4 +1,4 @@
-package com.upgradeacessoria.demo;
+package com.upgradeacessoria;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
