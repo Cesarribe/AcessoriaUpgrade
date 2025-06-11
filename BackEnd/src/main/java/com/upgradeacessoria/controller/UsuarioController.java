@@ -1,5 +1,6 @@
 package com.upgradeacessoria.controller;
 
+import com.upgradeacessoria.dto.AtualizarSenhaRequest;
 import com.upgradeacessoria.model.Usuario;
 import com.upgradeacessoria.service.UsuarioService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,6 +35,12 @@ public class UsuarioController {
         return usuarioService.buscarPorId(id)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
+    }
+
+    @PutMapping("/{id}/senha")
+    public ResponseEntity<Void> atualizarSenha(@PathVariable Long id, @RequestBody AtualizarSenhaRequest request) {
+        boolean atualizou = usuarioService.atualizarSenha(id, request.getNovaSenha());
+        return atualizou ? ResponseEntity.noContent().build() : ResponseEntity.notFound().build();
     }
 
     @PutMapping("/{id}")
