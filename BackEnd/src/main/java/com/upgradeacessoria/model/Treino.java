@@ -10,10 +10,9 @@ import jakarta.persistence.Id;
 import java.time.LocalDate;
 
 @Entity
-@Table(name = "treinos")
 @Data
-@NoArgsConstructor
 @AllArgsConstructor
+@NoArgsConstructor
 @Builder
 public class Treino {
 
@@ -39,5 +38,9 @@ public class Treino {
     @ManyToOne
     @JoinColumn(name = "objetivo_id")
     private Objetivo objetivo; // opcional: vínculo com o objetivo
-}
 
+
+    public TipoTreino getTipo() { return tipo; }
+
+    public Objetivo getObjetivo() { return objetivo; }
+}

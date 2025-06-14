@@ -1,10 +1,12 @@
 package com.upgradeacessoria.service;
 
+import com.upgradeacessoria.dto.TreinoDiaDTO;
 import com.upgradeacessoria.model.Treino;
 import com.upgradeacessoria.repository.TreinoRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -41,6 +43,16 @@ public class TreinoService {
             return treinoRepository.save(t);
         });
     }
+    public Optional<TreinoDiaDTO> buscarTreinoDoDia(String email) {
+        LocalDate hoje = LocalDate.now();
+        return treinoRepository.findByUsuarioEmailAndData(email, hoje)
+                .map(t -> new TreinoDiaDTO(
+                        t.getTipo(),
+                        t.getObjetivo() != null ? t.getObjetivo().toString() : "Sem objetivo"
+                ));
+    }
+
+
 
     public void deletar(Long id) {
         treinoRepository.deleteById(id);
