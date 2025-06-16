@@ -1,6 +1,8 @@
 package com.upgradeacessoria.service;
 
+import com.upgradeacessoria.dto.DesempenhoDTO;
 import com.upgradeacessoria.dto.TreinoDiaDTO;
+import com.upgradeacessoria.dto.TreinoSemanaDTO;
 import com.upgradeacessoria.model.Treino;
 import com.upgradeacessoria.repository.TreinoRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -52,6 +54,33 @@ public class TreinoService {
                 ));
     }
 
+    public List<TreinoSemanaDTO> buscarTreinosDaSemana(String email) {
+        LocalDate hoje = LocalDate.now();
+        LocalDate inicioSemana = hoje.minusDays(hoje.getDayOfWeek().getValue() - 1);
+        LocalDate fimSemana = inicioSemana.plusDays(6);
+
+        return treinoRepository.findByUsuarioEmailAndDataBetween(email, inicioSemana, fimSemana)
+                .stream()
+                .map(t -> new TreinoSemanaDTO(t.getData(), t.getTipo(), t.getDistancia(), t.getDuracao()))
+                .toList();
+    }
+
+    public DesempenhoDTO calcularDesempenho(String email) {
+        LocalDate hoje = LocalDate.now();
+        LocalDate inicioSemana = hoje.minusDays(hoje.getDayOfWeek().getValue() - 1);
+        LocalDate inicioMes = hoje.withDayOfMonth(1);
+        LocalDate inicioAno = hoje.withDayOfYear(1);
+
+        return DesempenhoDTO.builder()
+                .melhor5km(treinoRepository.findMelhorPacePorDistancia(email, 5.0))
+                .melhor10km(treinoRepository.findMelhorPacePorDistancia(email, 10.0))
+                .melhor21km(treinoRepository.findMelhorPacePorDistancia(email, 21.0))
+                .melhor42km(treinoRepository.findMelhorPacePorDistancia(email, 42.0))
+                .totalSemana(treinoRepository.findTotalDistanciaPorPeriodo(email, inicioSemana, hoje))
+                .totalMes(treinoRepository.findTotalDistanciaPorPeriodo(email, inicioMes, hoje))
+                .totalAno(treinoRepository.findTotalDistanciaPorPeriodo(email, inicioAno, hoje))
+                .build();
+    }
 
 
     public void deletar(Long id) {

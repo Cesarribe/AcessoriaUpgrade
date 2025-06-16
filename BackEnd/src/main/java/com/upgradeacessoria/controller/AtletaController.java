@@ -1,6 +1,9 @@
 package com.upgradeacessoria.controller;
 
+import com.upgradeacessoria.dto.DesempenhoDTO;
+import com.upgradeacessoria.dto.EventoDTO;
 import com.upgradeacessoria.dto.TreinoDiaDTO;
+import com.upgradeacessoria.dto.TreinoSemanaDTO;
 import com.upgradeacessoria.service.TreinoService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -9,6 +12,8 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/atleta")
@@ -25,4 +30,21 @@ public class AtletaController {
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.noContent().build());
     }
+    @GetMapping("/meus-treinos")
+    public ResponseEntity<List<TreinoSemanaDTO>> listarTreinos(Authentication auth) {
+        String email = auth.getName();
+        List<TreinoSemanaDTO> treinos = treinoService.buscarTreinosDaSemana(email);
+        return ResponseEntity.ok(treinos);
+    }
+    @GetMapping("/desempenho")
+    public ResponseEntity<DesempenhoDTO> consultarDesempenho(Authentication auth) {
+        String email = auth.getName();
+        return ResponseEntity.ok(treinoService.calcularDesempenho(email));
+    }
+    @GetMapping("/eventos")
+    public ResponseEntity<List<EventoDTO>> listarEventos() {
+        return ResponseEntity.ok(eventoService.listarEventosFuturos());
+    }
+
 }
+
