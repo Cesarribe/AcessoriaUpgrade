@@ -1,9 +1,7 @@
 package com.upgradeacessoria.controller;
 
-import com.upgradeacessoria.dto.DesempenhoDTO;
-import com.upgradeacessoria.dto.EventoDTO;
-import com.upgradeacessoria.dto.TreinoDiaDTO;
-import com.upgradeacessoria.dto.TreinoSemanaDTO;
+import com.upgradeacessoria.dto.*;
+import com.upgradeacessoria.service.EventoService;
 import com.upgradeacessoria.service.TreinoService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -22,6 +20,7 @@ import java.util.List;
 public class AtletaController {
 
     private final TreinoService treinoService;
+    private final EventoService eventoService;
 
     @GetMapping("/meu-treino")
     public ResponseEntity<TreinoDiaDTO> treinoDoDia(Authentication auth) {
@@ -44,6 +43,12 @@ public class AtletaController {
     @GetMapping("/eventos")
     public ResponseEntity<List<EventoDTO>> listarEventos() {
         return ResponseEntity.ok(eventoService.listarEventosFuturos());
+    }
+
+    @GetMapping("/historico")
+    public ResponseEntity<List<ProgressoMensalDTO>> listarHistorico(Authentication auth) {
+        String email = auth.getName();
+        return ResponseEntity.ok(treinoService.listarHistoricoProgresso(email));
     }
 
 }

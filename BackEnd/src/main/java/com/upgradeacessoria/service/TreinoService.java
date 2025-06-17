@@ -1,14 +1,15 @@
 package com.upgradeacessoria.service;
 
-import com.upgradeacessoria.dto.DesempenhoDTO;
-import com.upgradeacessoria.dto.TreinoDiaDTO;
-import com.upgradeacessoria.dto.TreinoSemanaDTO;
+import com.upgradeacessoria.dto.*;
 import com.upgradeacessoria.model.Treino;
 import com.upgradeacessoria.repository.TreinoRepository;
+import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -22,9 +23,6 @@ public class TreinoService {
         return treinoRepository.save(treino);
     }
 
-    public List<Treino> listarTodos() {
-        return treinoRepository.findAll();
-    }
 
     public Optional<Treino> buscarPorId(Long id) {
         return treinoRepository.findById(id);
@@ -81,6 +79,114 @@ public class TreinoService {
                 .totalAno(treinoRepository.findTotalDistanciaPorPeriodo(email, inicioAno, hoje))
                 .build();
     }
+
+    public List<ProgressoMensalDTO> listarHistoricoProgresso(String email) {
+        LocalDate hoje = LocalDate.now();
+        List<ProgressoMensalDTO> historico = new ArrayList<>();
+
+        for (int i = 0; i < 12; i++) {
+            LocalDate inicioMes = hoje.minusMonths(i).withDayOfMonth(1);
+            LocalDate fimMes = inicioMes.plusMonths(1).minusDays(1);
+
+            historico.add(new ProgressoMensalDTO(
+                    inicioMes.format(DateTimeFormatter.ofPattern("MMMM yyyy")),
+                    treinoRepository.findTotalKmPorMes(email, inicioMes, fimMes),
+                    treinoRepository.findMelhorPacePorMes(email, 5.0, inicioMes, fimMes),
+                    treinoRepository.findMelhorPacePorMes(email, 10.0, inicioMes, fimMes),
+                    treinoRepository.findMelhorPacePorMes(email, 21.0, inicioMes, fimMes),
+                    treinoRepository.findMelhorPacePorMes(email, 42.0, inicioMes, fimMes)
+            ));
+        }
+
+        return historico;
+    }
+
+    public List<Treino> listarTodos() {
+        return Optional.ofNullable(treinoRepository.findAll()).orElseGet(ArrayList::new);
+    }
+
+
+    public Treino cadastrarTreino(Treino treino) {
+        return treinoRepository.save(treino);
+    }
+
+    public Treino atualizarTreino(Long id, Treino treino) {
+        Treino existente = treinoRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Treino não encontrado!"));
+
+        existente.setData(treino.getData());
+        existente.setDistancia(treino.getDistancia());
+        existente.setDuracao(treino.getDuracao());
+        existente.setTipo(treino.getTipo());
+        existente.setObservacoes(treino.getObservacoes());
+        existente.setUsuario(treino.getUsuario());
+
+        return treinoRepository.save(existente);
+    }
+
+    public void excluirTreino(Long id) {
+        treinoRepository.deleteById(id);
+    }
+
+    public List<Treino> listarTreinosPorAtleta(String email) {
+        return treinoRepository.findByUsuarioEmailOrderByDataDesc(email);
+    }
+
+    public boolean treinoQuebraRecorde(Treino treino) {
+        Double recordeAtual = treinoRepository.findMelhorPacePorDistancia(treino.getUsuario().getEmail(), treino.getDistancia());
+
+        if (recordeAtual == null || (treino.getDuracao() / treino.getDistancia()) < recordeAtual) {
+            return true;
+        }
+
+        return false;
+    }
+
+    public List<ProgressoMensalDTO> listarRelatorioGeral() {
+        LocalDate hoje = LocalDate.now();
+        List<ProgressoMensalDTO> relatorio = new ArrayList<>();
+
+        for (int i = 0; i < 12; i++) { // Últimos 12 meses
+            LocalDate inicioMes = hoje.minusMonths(i).withDayOfMonth(1);
+            LocalDate fimMes = inicioMes.plusMonths(1).minusDays(1);
+
+            relatorio.add(new ProgressoMensalDTO(
+                    inicioMes.format(DateTimeFormatter.ofPattern("MMMM yyyy")),
+                    treinoRepository.findTotalKmPorPeriodo(inicioMes, fimMes),
+                    treinoRepository.findMelhorPacePorPeriodo(5.0, inicioMes, fimMes),
+                    treinoRepository.findMelhorPacePorPeriodo(10.0, inicioMes, fimMes),
+                    treinoRepository.findMelhorPacePorPeriodo(21.0, inicioMes, fimMes),
+                    treinoRepository.findMelhorPacePorPeriodo(42.0, inicioMes, fimMes)
+            ));
+        }
+
+        return relatorio;
+    }
+
+    public List<RelatorioGeralDTO> gerarRelatorioGeral() {
+        LocalDate hoje = LocalDate.now();
+        List<RelatorioGeralDTO> relatorio = new ArrayList<>();
+
+        for (int i = 0; i < 12; i++) { // Últimos 12 meses
+            LocalDate inicioMes = hoje.minusMonths(i).withDayOfMonth(1);
+            LocalDate fimMes = inicioMes.plusMonths(1).minusDays(1);
+
+            relatorio.add(new RelatorioGeralDTO(
+                    inicioMes.format(DateTimeFormatter.ofPattern("MMMM yyyy")),
+                    treinoRepository.findTotalKmPorPeriodo(inicioMes, fimMes),
+                    treinoRepository.findMelhorPacePorMes("admin", 5.0, inicioMes, fimMes), // Usando método existente
+                    treinoRepository.findMelhorPacePorMes("admin", 10.0, inicioMes, fimMes),
+                    treinoRepository.findMelhorPacePorMes("admin", 21.0, inicioMes, fimMes),
+                    treinoRepository.findMelhorPacePorMes("admin", 42.0, inicioMes, fimMes),
+                    treinoRepository.findTotalTreinosPorPeriodo(inicioMes, fimMes),
+                    treinoRepository.findAtletaMaisAtivo(inicioMes, fimMes)
+            ));
+        }
+
+        return relatorio;
+    }
+
+
 
 
     public void deletar(Long id) {
